@@ -32,84 +32,85 @@ const TOKEN_PADDING = 2;
 const TOKEN_START_VALUE = 1;
 
 async function loadQnA() {
-  const use = new UniversalSentenceEncoderQnA();
-  await use.load();
-  return use;
+    const use = new UniversalSentenceEncoderQnA();
+    await use.load();
+    return use;
 }
 
 class UniversalSentenceEncoderQnA {
-  async loadModel() {
-    return tfconv.loadGraphModel(BASE_PATH, {fromTFHub: true});
-  }
-
-  async load() {
-    const [model, vocabulary] = await Promise.all([
-      this.loadModel(),
-      loadVocabulary(`${BASE_PATH}/vocab.json?tfjs-format=file`)
-    ]);
-
-    this.model = model;
-    this.tokenizer = new Tokenizer(vocabulary, RESERVED_SYMBOLS_COUNT);
-  }
-
-  /**
-   *
-   * Returns a map of queryEmbedding and responseEmbedding
-   *
-   * @param input the ModelInput that contains queries and answers.
-   */
-  embed(input) {
-    const embeddings = tf.tidy(() => {
-      const queryEncoding = this.tokenizeStrings(input.queries, INPUT_LIMIT);
-      const responseEncoding =
-          this.tokenizeStrings(input.responses, INPUT_LIMIT);
-      if (input.contexts != null) {
-        if (input.contexts.length !== input.responses.length) {
-          throw new Error(
-              'The length of response strings ' +
-              'and context strings need to match.');
-        }
-      }
-      const contexts = input.contexts || [];
-      if (input.contexts == null) {
-        contexts.length = input.responses.length;
-        contexts.fill('');
-      }
-      const contextEncoding = this.tokenizeStrings(contexts, INPUT_LIMIT);
-      const modelInputs = {};
-      modelInputs[QUERY_NODE_NAME] = queryEncoding;
-      modelInputs[RESPONSE_NODE_NAME] = responseEncoding;
-      modelInputs[RESPONSE_CONTEXT_NODE_NAME] = contextEncoding;
-
-      return this.model.execute(
-          modelInputs, [QUERY_RESULT_NODE_NAME, RESPONSE_RESULT_NODE_NAME]);
-    });
-    const queryEmbedding = embeddings[0];
-    const responseEmbedding = embeddings[1];
-
-    return {queryEmbedding, responseEmbedding};
-  }
-
-  tokenizeStrings(strs, limit) {
-    const tokens =
-        strs.map(s => this.shiftTokens(this.tokenizer.encode(s), INPUT_LIMIT));
-    return tf.tensor2d(tokens, [strs.length, INPUT_LIMIT], 'int32');
-  }
-
-  shiftTokens(tokens, limit) {
-    tokens.unshift(TOKEN_START_VALUE);
-    for (let index = 0; index < limit; index++) {
-      if (index >= tokens.length) {
-        tokens[index] = TOKEN_PADDING;
-      } else if (!SKIP_VALUES.includes(tokens[index])) {
-        tokens[index] += OFFSET;
-      }
+    async loadModel() {
+        return tfconv.loadGraphModel(BASE_PATH, { fromTFHub: true });
     }
-    return tokens.slice(0, limit);
-  }
+
+    async load() {
+        const [model, vocabulary] = await Promise.all([
+            this.loadModel(),
+            loadVocabulary(`${BASE_PATH}/vocab.json?tfjs-format=file`)
+        ]);
+
+        this.model = model;
+        this.tokenizer = new Tokenizer(vocabulary, RESERVED_SYMBOLS_COUNT);
+    }
+
+    /**
+     *
+     * Returns a map of queryEmbedding and responseEmbedding
+     *
+     * @param input the ModelInput that contains queries and answers.
+     */
+    embed(input) {
+        const embeddings = tf.tidy(() => {
+            const queryEncoding = this.tokenizeStrings(input.queries, INPUT_LIMIT);
+            const responseEncoding =
+                this.tokenizeStrings(input.responses, INPUT_LIMIT);
+            if (input.contexts != null) {
+                if (input.contexts.length !== input.responses.length) {
+                    throw new Error(
+                        'The length of response strings ' +
+                        'and context strings need to match.');
+                }
+            }
+            const contexts = input.contexts || [];
+            if (input.contexts == null) {
+                contexts.length = input.responses.length;
+                contexts.fill('');
+            }
+            const contextEncoding = this.tokenizeStrings(contexts, INPUT_LIMIT);
+            const modelInputs = {};
+            modelInputs[QUERY_NODE_NAME] = queryEncoding;
+            modelInputs[RESPONSE_NODE_NAME] = responseEncoding;
+            modelInputs[RESPONSE_CONTEXT_NODE_NAME] = contextEncoding;
+
+            return this.model.execute(
+                modelInputs, [QUERY_RESULT_NODE_NAME, RESPONSE_RESULT_NODE_NAME]);
+        });
+        const queryEmbedding = embeddings[0];
+        const responseEmbedding = embeddings[1];
+
+        return { queryEmbedding, responseEmbedding };
+    }
+
+    tokenizeStrings(strs, limit) {
+        const tokens =
+            strs.map(s => this.shiftTokens(this.tokenizer.encode(s), INPUT_LIMIT));
+        return tf.tensor2d(tokens, [strs.length, INPUT_LIMIT], 'int32');
+    }
+
+    shiftTokens(tokens, limit) {
+        tokens.unshift(TOKEN_START_VALUE);
+        for (let index = 0; index < limit; index++) {
+            if (index >= tokens.length) {
+                tokens[index] = TOKEN_PADDING;
+            } else if (!SKIP_VALUES.includes(tokens[index])) {
+                tokens[index] += OFFSET;
+            }
+        }
+        return tokens.slice(0, limit);
+    }
 }
 
 module.exports = {
-  loadQnA,
-  UniversalSentenceEncoderQnA
+    version,
+    loadQnA,
+    UniversalSentenceEncoderQnA
 };
