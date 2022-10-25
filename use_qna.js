@@ -1,13 +1,12 @@
-const tfconv = require('@tensorflow/tfjs-converter');
 const tf = require('@tensorflow/tfjs-core');
+const tfconv = require('@tensorflow/tfjs-converter');
 
-const loadVocabulary = require('./tokenizer').loadVocabulary;
-const Tokenizer = require('./tokenizer').Tokenizer;
+const { loadVocabulary } = require('./tokenizer');
+const { Tokenizer } = require('./tokenizer');
 
-const version = require('./version').version;
+const { version } = require('./version');
 
-const BASE_PATH =
-    'https://tfhub.dev/google/tfjs-model/universal-sentence-encoder-qa-ondevice/1';
+const BASE_PATH = 'https://tfhub.dev/google/tfjs-model/universal-sentence-encoder-qa-ondevice/1';
 // Index in the vocab file that needs to be skipped.
 const SKIP_VALUES = [0, 1, 2];
 // Offset value for skipped vocab index.

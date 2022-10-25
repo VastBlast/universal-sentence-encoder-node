@@ -1,16 +1,15 @@
-// JavaScript:
+const fs = require('fs');
 const tf = require('@tensorflow/tfjs-core');
 const tfconv = require('@tensorflow/tfjs-converter');
 
-const BASE_PATH =
-    'https://storage.googleapis.com/tfjs-models/savedmodel/universal_sentence_encoder';
+const BASE_PATH = 'https://storage.googleapis.com/tfjs-models/savedmodel/universal_sentence_encoder';
 
-const loadTokenizer = require('./tokenizer').loadTokenizer;
-const loadVocabulary = require('./tokenizer').loadVocabulary;
-const Tokenizer = require('./tokenizer').Tokenizer;
-const loadQnA = require('./use_qna').loadQnA;
+const { loadTokenizer } = require('./tokenizer');
+const { loadVocabulary } = require('./tokenizer');
+const { Tokenizer } = require('./tokenizer');
+const { loadQnA } = require('./use_qna');
 
-const version = require('./version').version;
+const { version } = require('./version');
 
 async function load(config) {
     const use = new UniversalSentenceEncoder();
@@ -18,10 +17,39 @@ async function load(config) {
     return use;
 }
 
+
 class UniversalSentenceEncoder {
-    async loadModel(modelUrl) {
+    /*async loadModel(modelUrl) {
         return modelUrl
             ? tfconv.loadGraphModel(modelUrl)
+            : tfconv.loadGraphModel(
+                'https://tfhub.dev/tensorflow/tfjs-model/universal-sentence-encoder-lite/1/default/1',
+                { fromTFHub: true }
+            );
+    }*/
+
+    async loadModel(modelUrl) {
+        return modelUrl
+            ? tfconv.loadGraphModel(modelUrl, {
+                fetchFunc: (path, requestInit) => {
+                    //console.log('FETCH:', path);
+                    if (path.startsWith('file://')) {
+                        const filePath = path.replace('file://', '');
+                        const data = fs.readFileSync(filePath);
+                        //console.log('DATA:', data);
+                        return {
+                            ok: true,
+                            status: 200,
+                            url: path,
+                            arrayBuffer: () => Promise.resolve(data),
+                            text: () => Promise.resolve(data.toString()),
+                            json: () => Promise.resolve(JSON.parse(data.toString()))
+                        }
+                    }
+
+                    return tf.util.fetch(path, requestInit);
+                }
+            })
             : tfconv.loadGraphModel(
                 'https://tfhub.dev/tensorflow/tfjs-model/universal-sentence-encoder-lite/1/default/1',
                 { fromTFHub: true }

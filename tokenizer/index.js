@@ -1,8 +1,9 @@
 const tf = require('@tensorflow/tfjs-core');
+const fs = require('fs');
 
-const stringToChars = require('../util').stringToChars;
+const { stringToChars } = require('../util');
 
-const Trie = require('./trie').Trie;
+const { Trie } = require('./trie');
 
 const separator =
     '\u2581';  // This is the unicode character 'lower one eighth block'.
@@ -120,6 +121,12 @@ async function loadTokenizer(pathToVocabulary) {
  * UniversalSentenceEncoder.
  */
 async function loadVocabulary(pathToVocabulary) {
+    if (pathToVocabulary.startsWith('file://')) {
+        pathToVocabulary = pathToVocabulary.replace('file://', '');
+        const vocabulary = JSON.parse(fs.readFileSync(pathToVocabulary));
+        return vocabulary;
+    }
+
     const vocabulary = await tf.util.fetch(pathToVocabulary);
     return vocabulary.json();
 }
