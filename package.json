@@ -10,8 +10,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@tensorflow/tfjs-converter": "^4.0.0",
-    "@tensorflow/tfjs-core": "^4.0.0"
+    "@tensorflow/tfjs-converter": "^4.2.0",
+    "@tensorflow/tfjs-core": "^4.2.0"
   },
   "devDependencies": {
     "@tensorflow/tfjs-node": "^4.0.0"

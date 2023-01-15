@@ -1,4 +1,4 @@
-const stringToChars = require('../util').stringToChars;
+const { stringToChars } = require('../util');
 
 class TrieNode {
     constructor() {

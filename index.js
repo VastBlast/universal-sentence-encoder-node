@@ -1,4 +1,5 @@
-const fs = require('fs');
+const path = require('path');
+const { readFileSync } = require('fs');
 const tf = require('@tensorflow/tfjs-core');
 const tfconv = require('@tensorflow/tfjs-converter');
 
@@ -18,16 +19,10 @@ async function load(config) {
 }
 
 
-class UniversalSentenceEncoder {
-    /*async loadModel(modelUrl) {
-        return modelUrl
-            ? tfconv.loadGraphModel(modelUrl)
-            : tfconv.loadGraphModel(
-                'https://tfhub.dev/tensorflow/tfjs-model/universal-sentence-encoder-lite/1/default/1',
-                { fromTFHub: true }
-            );
-    }*/
+const modelUrlDefault = 'file://' + path.join(__dirname, './models/universal-sentence-encoder-lite_2/model.json');
+const vocabUrlDefault = 'file://' + path.join(__dirname, './models/universal-sentence-encoder-lite_2/vocab.json');
 
+class UniversalSentenceEncoder {
     async loadModel(modelUrl) {
         return modelUrl
             ? tfconv.loadGraphModel(modelUrl, {
@@ -35,7 +30,7 @@ class UniversalSentenceEncoder {
                     //console.log('FETCH:', path);
                     if (path.startsWith('file://')) {
                         const filePath = path.replace('file://', '');
-                        const data = fs.readFileSync(filePath);
+                        const data = readFileSync(filePath);
                         //console.log('DATA:', data);
                         return {
                             ok: true,
@@ -57,6 +52,9 @@ class UniversalSentenceEncoder {
     }
 
     async load(config = {}) {
+        if (!config.modelUrl) config.modelUrl = modelUrlDefault;
+        if (!config.vocabUrl) config.vocabUrl = vocabUrlDefault;
+
         const [model, vocabulary] = await Promise.all([
             this.loadModel(config.modelUrl),
             loadVocabulary(config.vocabUrl || `${BASE_PATH}/vocab.json`)
