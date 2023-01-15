@@ -18,9 +18,8 @@ async function load(config) {
     return use;
 }
 
-
-const modelUrlDefault = 'file://' + path.join(__dirname, './models/universal-sentence-encoder-lite_2/model.json');
-const vocabUrlDefault = 'file://' + path.join(__dirname, './models/universal-sentence-encoder-lite_2/vocab.json');
+const modelUrlDefault = 'file://' + path.relative('./', path.join(__dirname, './models/universal-sentence-encoder-lite_2/model.json')).replaceAll('\\', '/');
+const vocabUrlDefault = 'file://' + path.relative('./', path.join(__dirname, './models/universal-sentence-encoder-lite_2/vocab.json')).replaceAll('\\', '/');
 
 class UniversalSentenceEncoder {
     async loadModel(modelUrl) {
